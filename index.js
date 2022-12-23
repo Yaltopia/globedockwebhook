@@ -36,13 +36,13 @@ app.get ("/", (req, res) => {
 app.post ("/update", verifyPostData, async (req, res) => {
 	if (req.headers['is_release']) {
 		console.log("Updating");
-		await exec("cd /root/globedockweb/");
 		await exec("rm -rf build/")
 		await axios.get (" https://api.github.com/repos/yaltopia/globedockweb/releases/latest", {
-			headers: {}
-
+			headers: {
+				Accept: "application/vnd.github+json",
+				"X-GitHub-Api-Version": "2022-11-28"
 			}
-		).then (async (response) => {
+		}).then (async (response) => {
 			console.log(response.data);
 			await exec("wget " + response.data.assets[0].browser_download_url);
 			await exec("unzip build.zip -d build/");
@@ -50,7 +50,10 @@ app.post ("/update", verifyPostData, async (req, res) => {
 		}
 		).catch (err => {
 			console.log(err);
+			return res.status(500).send("Error");
 		});
+
+		return res.status(200).send("Updated");
 	}
 } );
 app.use(cors());
