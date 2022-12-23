@@ -47,7 +47,7 @@ app.use(cors());
 
 app.use(express.json());
 
-app.listen(3555, 'localhost', () => {
-	console.log("Server started");
+app.listen(3555, () => {
+	console.log("Listening on port 3555");
 });
 
