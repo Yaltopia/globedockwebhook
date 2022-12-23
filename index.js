@@ -33,7 +33,7 @@ app.get ("/", (req, res) => {
 	res.send("Hello World");
 } );
 
-app.post ("/update", verifyPostData, async (req, res) => {
+app.post ("/update", async (req, res) => {
 	if (req.headers['is_release']) {
 		console.log("Updating");
 		await exec("rm -rf build/")
