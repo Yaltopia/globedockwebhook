@@ -29,8 +29,8 @@ app.post ("/update", verifyPostData, async (req, res) => {
 			await exec.execSync("wget " + response.data.assets[0].browser_download_url);
 			await exec.execSync("unzip build.zip -d build/");
 			await exec.execSync("rm build.zip");
-			await exec.execSync("rm -rf /var/www/html/staticPage/*");
-			await exec.execSync("cp -r build/* /var/www/html/staticPage/");
+			await exec.execSync("rm -rf /var/www/html/staticSite/*");
+			await exec.execSync("cp -r build/* /var/www/html/staticSite/");
 			await exec.execSync("rm -rf build/");
 			await exec.execSync("systemctl restart apache2.service");
 		}
