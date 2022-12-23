@@ -60,7 +60,7 @@ app.use(cors());
 
 app.use(express.json());
 
-app.listen(3555, () => {
-  console.log("Server started on port 3555!");
+app.listen(3555, '178.128.164.204', () => {
+	console.log("Server started");
 });
 
