@@ -6,24 +6,6 @@ import axios from "axios";
 export function verifyPostData(req, res, next) {
 	req.headers['is_release'] = req.headers["x-github-event"] === "release";
 
-	if (!req.rawBody) {
-		req.headers['is_secure'] = false;
-		console.log("Failed");
-		return next('Request body empty');
-	}
-
-	const sig = Buffer.from(req.get(sigHeaderName) || '', 'utf8')
-	const hmac = crypto.createHmac(sigHashAlg, secret)
-	const digest = Buffer.from(sigHashAlg + '=' + hmac.update(req.rawBody).digest('hex'), 'utf8')
-
-	if (sig.length !== digest.length || !crypto.timingSafeEqual(digest, sig)) {
-		req.headers['is_secure'] = false;
-		console.log("Failed");
-		return next(`Request body digest (${digest}) did not match ${sigHeaderName} (${sig})`)
-	}
-
-	console.log("Success");
-	req.headers['is_secure'] = true;
 	return next()
 }
 
@@ -33,10 +15,10 @@ app.get ("/", (req, res) => {
 	res.send("Hello World");
 } );
 
-app.post ("/update", async (req, res) => {
+app.post ("/update", verifyPostData, async (req, res) => {
 	if (req.headers['is_release']) {
 		console.log("Updating");
-		await exec("rm -rf build/")
+		await exec.execSync("rm -rf build/")
 		await axios.get (" https://api.github.com/repos/yaltopia/globedockweb/releases/latest", {
 			headers: {
 				Accept: "application/vnd.github+json",
@@ -44,9 +26,13 @@ app.post ("/update", async (req, res) => {
 			}
 		}).then (async (response) => {
 			console.log(response.data);
-			await exec("wget " + response.data.assets[0].browser_download_url);
-			await exec("unzip build.zip -d build/");
-			await exec("rm build.zip");
+			await exec.execSync("wget " + response.data.assets[0].browser_download_url);
+			await exec.execSync("unzip build.zip -d build/");
+			await exec.execSync("rm build.zip");
+			await exec.execSync("rm -rf /var/www/html/staticPage/*");
+			await exec.execSync("cp -r build/* /var/www/html/staticPage/");
+			await exec.execSync("rm -rf build/");
+			await exec.execSync("systemctl restart apache2.service");
 		}
 		).catch (err => {
 			console.log(err);
@@ -55,12 +41,13 @@ app.post ("/update", async (req, res) => {
 
 		return res.status(200).send("Updated");
 	}
+	return res.status(404).send("Not Found");
 } );
 app.use(cors());
 
 app.use(express.json());
 
-app.listen(3555, '178.128.164.204', () => {
+app.listen(3555, 'localhost', () => {
 	console.log("Server started");
 });
 
